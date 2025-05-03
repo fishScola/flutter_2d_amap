@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -6,9 +5,9 @@ import 'package:flutter_2d_amap/flutter_2d_amap.dart';
 
 class AMap2DMobileController extends AMap2DController {
   AMap2DMobileController(
-      int id,
-      this._widget,
-      ) : _channel = MethodChannel('plugins.weilu/flutter_2d_amap_$id') {
+    int id,
+    this._widget,
+  ) : _channel = MethodChannel('plugins.weilu/flutter_2d_amap_$id') {
     _channel.setMethodCallHandler(_handleMethod);
   }
   final MethodChannel _channel;
@@ -17,13 +16,15 @@ class AMap2DMobileController extends AMap2DController {
 
   Future<dynamic> _handleMethod(MethodCall call) async {
     final String method = call.method;
-    switch(method) {
+    switch (method) {
       case 'poiSearchResult':
         {
           if (_widget.onPoiSearched != null) {
-            final Map<dynamic, dynamic> args = call.arguments as Map<dynamic, dynamic>;
+            final Map<dynamic, dynamic> args =
+                call.arguments as Map<dynamic, dynamic>;
             final List<PoiSearch> list = [];
-            for (final value in json.decode(args['poiSearchResult'] as String) as List) {
+            for (final value
+                in json.decode(args['poiSearchResult'] as String) as List) {
               list.add(PoiSearch.fromJsonMap(value as Map<String, dynamic>));
             }
             _widget.onPoiSearched!(list);
@@ -45,14 +46,28 @@ class AMap2DMobileController extends AMap2DController {
 
   @override
   Future<void> move(String lat, String lon) async {
-    return _channel.invokeMethod('move', <String, dynamic>{
-      'lat': lat,
-      'lon': lon
-    });
+    return _channel
+        .invokeMethod('move', <String, dynamic>{'lat': lat, 'lon': lon});
   }
 
   @override
   Future<void> location() async {
     return _channel.invokeMethod('location');
+  }
+
+  @override
+  Future<void> setZoom(double zoomLevel) async {
+    return _channel
+        .invokeMethod('setZoom', <String, dynamic>{'zoomLevel': zoomLevel});
+  }
+
+  @override
+  Future<void> zoomIn() async {
+    return _channel.invokeMethod('zoomIn');
+  }
+
+  @override
+  Future<void> zoomOut() async {
+    return _channel.invokeMethod('zoomOut');
   }
 }

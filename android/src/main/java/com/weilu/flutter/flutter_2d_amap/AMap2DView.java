@@ -136,6 +136,22 @@ public class AMap2DView implements PlatformView, MethodChannel.MethodCallHandler
                     mLocationClient.startLocation();
                 }
                 break;
+            case "setZoom":
+                double zoomLevel = (double) request.get("zoomLevel");
+                aMap.animateCamera(CameraUpdateFactory.zoomTo((float) zoomLevel));
+                break;
+            case "zoomIn":
+                float currentZoom = aMap.getCameraPosition().zoom;
+                if (currentZoom < 20) {
+                    aMap.animateCamera(CameraUpdateFactory.zoomTo(currentZoom + 1));
+                }
+                break;
+            case "zoomOut":
+                float currentZoomOut = aMap.getCameraPosition().zoom;
+                if (currentZoomOut > 2) {
+                    aMap.animateCamera(CameraUpdateFactory.zoomTo(currentZoomOut - 1));
+                }
+                break;
             default:
                 break;    
         }

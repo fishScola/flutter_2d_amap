@@ -1,13 +1,10 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_2d_amap/flutter_2d_amap.dart';
 import 'package:flutter_2d_amap/src/web/amapjs.dart';
 import 'package:js/js.dart';
 
 class AMap2DWebController extends AMap2DController {
-
   AMap2DWebController(this._aMap, this._widget) {
-
     _placeSearchOptions = PlaceSearchOptions(
       extensions: 'all',
       type: _kType,
@@ -19,7 +16,7 @@ class AMap2DWebController extends AMap2DController {
       //_aMap.resize(); /// 2.0无法自适应容器大小，需手动调用触发计算。
       searchNearBy(LngLat(event.lnglat.getLng(), event.lnglat.getLat()));
     }));
-    
+
     /// 定位插件初始化
     _geolocation = Geolocation(GeolocationOptions(
       timeout: 15000,
@@ -38,7 +35,8 @@ class AMap2DWebController extends AMap2DController {
   late Geolocation _geolocation;
   MarkerOptions? _markerOptions;
   late PlaceSearchOptions _placeSearchOptions;
-  static const String _kType = '010000|010100|020000|030000|040000|050000|050100|060000|060100|060200|060300|060400|070000|080000|080100|080300|080500|080600|090000|090100|090200|090300|100000|100100|110000|110100|120000|120200|120300|130000|140000|141200|150000|150100|150200|160000|160100|170000|170100|170200|180000|190000|200000';
+  static const String _kType =
+      '010000|010100|020000|030000|040000|050000|050100|060000|060100|060200|060300|060400|070000|080000|080100|080300|080500|080600|090000|090100|090200|090300|100000|100100|110000|110100|120000|120200|120300|130000|140000|141200|150000|150100|150200|160000|160100|170000|170100|170200|180000|190000|200000';
 
   /// city：cityName（中文或中文全拼）、cityCode均可
   @override
@@ -62,12 +60,11 @@ class AMap2DWebController extends AMap2DController {
           icon: AMapIcon(IconOptions(
             size: Size(26, 34),
             imageSize: Size(26, 34),
-            image: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+            image:
+                'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
           )),
           offset: Pixel(-13, -34),
-          anchor: 'bottom-center'
-      );
-      
+          anchor: 'bottom-center');
     } else {
       _markerOptions?.position = lngLat;
     }
@@ -94,7 +91,7 @@ class AMap2DWebController extends AMap2DController {
     }));
     return Future.value();
   }
-  
+
   /// 根据经纬度搜索
   void searchNearBy(LngLat lngLat) {
     if (!_widget.isPoiSearch) {
@@ -104,41 +101,67 @@ class AMap2DWebController extends AMap2DController {
     placeSearch.searchNearBy('', lngLat, 2000, searchResult);
   }
 
-  Function(String status, SearchResult result) get searchResult => allowInterop((status, result) {
-    final List<PoiSearch> list = <PoiSearch>[];
-    if (status == 'complete') {
-      result.poiList?.pois?.forEach((dynamic poi) {
-        if (poi is Poi) {
-          final PoiSearch poiSearch = PoiSearch(
-            cityCode: poi.citycode,
-            cityName: poi.cityname,
-            provinceName: poi.pname,
-            title: poi.name,
-            adName: poi.adname,
-            provinceCode: poi.pcode,
-            latitude: poi.location.getLat().toString(),
-            longitude: poi.location.getLng().toString(),
-          );
-          list.add(poiSearch);
+  Function(String status, SearchResult result) get searchResult =>
+      allowInterop((status, result) {
+        final List<PoiSearch> list = <PoiSearch>[];
+        if (status == 'complete') {
+          result.poiList?.pois?.forEach((dynamic poi) {
+            if (poi is Poi) {
+              final PoiSearch poiSearch = PoiSearch(
+                cityCode: poi.citycode,
+                cityName: poi.cityname,
+                provinceName: poi.pname,
+                title: poi.name,
+                adName: poi.adname,
+                provinceCode: poi.pcode,
+                latitude: poi.location.getLat().toString(),
+                longitude: poi.location.getLng().toString(),
+              );
+              list.add(poiSearch);
+            }
+          });
+        } else if (status == 'no_data') {
+          if (kDebugMode) {
+            print('无返回结果');
+          }
+        } else {
+          if (kDebugMode) {
+            print(result);
+          }
+        }
+
+        /// 默认点移动到搜索结果的第一条
+        if (list.isNotEmpty) {
+          _aMap.setZoom(17);
+          move(list[0].latitude!, list[0].longitude!);
+        }
+
+        if (_widget.onPoiSearched != null) {
+          _widget.onPoiSearched!(list);
         }
       });
-    } else if (status == 'no_data'){
-      if (kDebugMode) {
-        print('无返回结果');
-      }
-    } else {
-      if (kDebugMode) {
-        print(result);
-      }
-    }
-    /// 默认点移动到搜索结果的第一条
-    if (list.isNotEmpty) {
-      _aMap.setZoom(17);
-      move(list[0].latitude!, list[0].longitude!);
-    }
 
-    if (_widget.onPoiSearched != null) {
-      _widget.onPoiSearched!(list);
-    }
-  });
+  @override
+  Future<void> setZoom(double zoomLevel) async {
+    _aMap.setZoom(zoomLevel);
+    return Future.value();
+  }
+
+  @override
+  Future<void> zoomIn() async {
+    // 获取当前缩放级别
+    final num currentZoom = _aMap.getZoom();
+    // 放大一级，最大为20
+    _aMap.setZoom(currentZoom < 20 ? currentZoom + 1 : 20);
+    return Future.value();
+  }
+
+  @override
+  Future<void> zoomOut() async {
+    // 获取当前缩放级别
+    final num currentZoom = _aMap.getZoom();
+    // 缩小一级，最小为2
+    _aMap.setZoom(currentZoom > 2 ? currentZoom - 1 : 2);
+    return Future.value();
+  }
 }

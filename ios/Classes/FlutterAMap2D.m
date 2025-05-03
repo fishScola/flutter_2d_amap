@@ -228,6 +228,19 @@ NSString* _types = @"010000|010100|020000|030000|040000|050000|050100|060000|060
         [self drawMarkers:[lat doubleValue] lon:[lon doubleValue]];
     } else if ([[call method] isEqualToString:@"location"]) {
         [self.locationManager startUpdatingLocation]; 
+    } else if ([[call method] isEqualToString:@"setZoom"]) {
+        NSNumber* zoomLevel = [call arguments][@"zoomLevel"];
+        [self->_mapView setZoomLevel:[zoomLevel floatValue] animated:YES];
+    } else if ([[call method] isEqualToString:@"zoomIn"]) {
+        float currentZoom = self->_mapView.zoomLevel;
+        if (currentZoom < 20) {
+            [self->_mapView setZoomLevel:currentZoom + 1 animated:YES];
+        }
+    } else if ([[call method] isEqualToString:@"zoomOut"]) {
+        float currentZoom = self->_mapView.zoomLevel;
+        if (currentZoom > 2) {
+            [self->_mapView setZoomLevel:currentZoom - 1 animated:YES];
+        }
     }
 }
 @end
